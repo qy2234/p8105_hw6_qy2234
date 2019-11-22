@@ -46,3 +46,20 @@ birthweight_data %>%
   summarise_all(funs(sum(is.na(.)))) %>% 
   knitr::kable()
 ```
+
+```{r}
+#### stepwise regression
+fit_test = lm(bwt ~ ., data = birthweight_data)
+step(fit_test, direction = 'backward')
+```
+
+* The results show that the model should include bwt ~ babysex + bhead + blength + delwt + fincome +  gaweeks + mheight + mrace + parity + ppwt + smoken. 
+
+```{r}
+#### test fitted regression model
+fitted = lm(bwt ~ babysex + bhead + blength + delwt + fincome + gaweeks + mheight + mrace + parity + ppwt + smoken, data = birthweight_data)
+summary(fitted)
+```
+
+* Based on the results, we see that the adjusted R-squared is 0.7173 which is resonable and the overall p-value is less than 0.05, therefore the variables used above to predict birthweight are chosen to be our predictors.
+
