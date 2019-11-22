@@ -106,4 +106,26 @@ crossv_mc(birthweight_data, 100) %>%
 
 * In general, we want a model that has the lowest RMSE value. In this case, our fitted model has the lowest RMSE among all three models which indicates that our model outperform the other two.
 
+## Problem 2
 
+```{r}
+#### download weather dataset
+weather_df = 
+  rnoaa::meteo_pull_monitors(
+    c("USW00094728"),
+    var = c("PRCP", "TMIN", "TMAX"), 
+    date_min = "2017-01-01",
+    date_max = "2017-12-31") %>%
+  mutate(
+    name = recode(id, USW00094728 = "CentralPark_NY"),
+    tmin = tmin / 10,
+    tmax = tmax / 10) %>%
+  select(name, id, everything())
+```
+
+```{r}
+#### simple linear regression with tmax as the response and tmin as the predictor
+weather_slr = lm(tmax ~ tmin, data = weather_df)
+summary(weather_slr)
+```
+$$\hat{Y} = 7.20850 + 1.03924X_i where Y = tmax and X = tmin$$
