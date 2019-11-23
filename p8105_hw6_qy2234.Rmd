@@ -5,7 +5,7 @@ date: "11/21/2019"
 output: github_document
 ---
 
-```{r setup, include=FALSE}
+```{r}
 #### general setup
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
@@ -31,10 +31,9 @@ scale_fill_discrete = scale_fill_viridis_d
 theme_set(theme_minimal() + theme(legend.position = "bottom"))
 ```
 
-
 # problem 1
 ```{r}
-#### load and clean the data
+#### load and clean the birthweight data
 birthweight_data = read_csv("./data/birthweight.csv") %>%
   mutate(babysex = as.factor(babysex),
          frace = as.factor(frace),
@@ -48,7 +47,7 @@ birthweight_data %>%
 ```
 
 ```{r}
-#### stepwise regression
+#### create a stepwise regression
 fit_test = lm(bwt ~ ., data = birthweight_data)
 step(fit_test, direction = 'backward')
 ```
@@ -63,8 +62,8 @@ summary(fitted)
 
 * Based on the results, we see that the adjusted R-squared is 0.7173 which is resonable and the overall p-value is less than 0.05, therefore the variables used above to predict birthweight are chosen to be our predictors.
 
-#### Plot of model residuals against fitted values 
 ```{r}
+#### plot of model residuals against fitted values 
 birthweight_data %>% 
   add_predictions(model = fitted, var = "prediction") %>% 
   add_residuals(model = fitted, var = "residuals") %>%
@@ -79,14 +78,14 @@ birthweight_data %>%
 * Based on the fitted line, which is suppose be around 0 residuals, we see that when the fitted value is low, outliers are present. In addition, outside the interval approximately from 2000-4000, the residuals are not normally distributed which is an indicator for unreliable model prediction.
 
 ```{r}
-#### compare our model to two others:
+#### compare our model to two others
 set.seed(1)
 
-#### create traing and testing dataset
+#### create training and testing dataset
 crossv_mc(birthweight_data, 100) %>%
   mutate(train = map(train, as_tibble),
          test = map(test, as_tibble)) %>% 
-# Fit each of three models to this dataset 
+# fit each of three models to this dataset 
     mutate(fitted = map(train, ~lm(bwt ~ babysex + bhead + blength + gaweeks + mheight + mrace + parity + ppwt + smoken, data = .x)),
            compare_model_1 = map(train, ~lm(bwt ~ blength + gaweeks, data = .x)),
            compare_model_2 = map(train, ~lm(bwt ~ babysex + blength + bhead + babysex * blength + babysex * bhead + blength * bhead + babysex * blength * bhead, data = .x))) %>% 
@@ -100,14 +99,14 @@ crossv_mc(birthweight_data, 100) %>%
     ggplot(aes(x = model, y = rmse, fill = model)) + 
     geom_boxplot(alpha = .5, color = " red") + 
     labs(title = "Compare Fitted Model To Two Others",
-       x = "Model",
-       y = "RMSE")
+       x = "Models",
+       y = "RMSE value")
 ```
 
 * In general, we want a model that has the lowest RMSE value. In this case, our fitted model has the lowest RMSE among all three models which indicates that our model outperform the other two.
 
-## Problem 2
 
+## Problem 2
 ```{r}
 #### download weather dataset
 weather_df = 
