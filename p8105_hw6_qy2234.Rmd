@@ -128,3 +128,70 @@ weather_slr = lm(tmax ~ tmin, data = weather_df)
 summary(weather_slr)
 ```
 $$\hat{Y} = 7.20850 + 1.03924X_i where Y = tmax and X = tmin$$
+
+```{r}
+#### r-squared estimate and log(beta_hat_0*beta_hat_1)
+
+# write a function for bootstrap
+bootstrap_function = function(x){
+  
+  model_1 =
+    x %>% 
+    broom::tidy()
+  
+  model_2 =
+    x %>%
+    broom::glance()
+  
+  tibble(
+    r_squared = pull(model_2, adj.r.squared),
+    log_beta0_beta1 = log(pull(model_1, estimate)[1] * pull(model_1, estimate)[2]))
+  
+}
+
+# generate the bootstrap samples and caculate the estimates for r_squared and log(beta_hat_0*beta_hat_1)
+estimates = 
+ weather_df %>% 
+  modelr::bootstrap(n = 5000) %>% 
+  mutate(
+    models = map(strap, ~ lm(tmax ~ tmin, data = .x)),
+    results = map(models, bootstrap_function)) %>% 
+  unnest(results) %>%
+  select(-strap, -models) %>% 
+  rename("estimate number" = `.id`) 
+```
+
+```{r}
+#### plot showing the distribution of the estimates of R-squared
+estimates %>% 
+  ggplot(aes(x = r_squared)) +
+  geom_density() +
+  labs(title = "Distribution of R-squared estimates", 
+       x = "R-squared values",
+       y = "Number of estimates")
+
+#### plot showing the distribution of the estimates of log(beta_hat_0*beta_hat_1)
+estimates %>% 
+  ggplot(aes(x = log_beta0_beta1)) +
+  geom_density() +
+  labs(title = "Distribution of log(beta0*beta1)", 
+       x = "Distribution of log(beta_hat_0*beta_hat_1 estimates",
+       y = "Number of estimates")
+```
+
+Based on the ditribution of R-squared we see a approximately noraml distribution with a tail towards the left side which indicates that there might be potential outliers with low R-squared value.
+
+Based on the distribution of log(beta_hat_0*beta_hat_1) we also see a approximately normal distribution with a tail towards the left side which indicates that there might be potential outliers with low R-squared value.
+
+```{r}
+#### 95% confidence interval, R-squared
+quantile(estimates$r_squared, c(.025, .975))
+```
+
+```{r}
+#### 95% confidence interval, log(beta_hat_0*beta_hat_1)
+quantile(estimates$log_beta0_beta1, c(.025, .975))
+```
+
+
+
